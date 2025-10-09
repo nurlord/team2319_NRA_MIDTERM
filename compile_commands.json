@@ -1,0 +1,19 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Iinclude",
+      "-Wall",
+      "-Wextra",
+      "-std=c++17",
+      "-g",
+      "-c",
+      "-o",
+      "src/main.o",
+      "src/main.cpp"
+    ],
+    "directory": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM",
+    "file": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/main.cpp",
+    "output": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/main.o"
+  }
+]
