@@ -329,7 +329,6 @@ int main() {
         glm::vec3(0.8f, 0.8f, 0.2f), glm::vec3(0.9f, 0.9f, 0.9f)};
 
     float resolutionScale = (float)fbH / 1080.0f;
-
     for (int x = 0; x < board.width; ++x) {
       for (int y = 0; y < board.height; ++y) {
         const Cell &cell = board.get(x, y);
@@ -359,7 +358,9 @@ int main() {
     }
 
 
+
     float overlayScale = 2.4f * resolutionScale;
+
 
 
     if (inMenu) {
@@ -502,6 +503,11 @@ void drawText(Shader &shader, const std::string &text, float x, float y,
   if (numQuads <= 0)
     return;
 
+
+  float textHeight =
+      static_cast<float>(
+          stb_easy_font_height(const_cast<char *>(text.c_str())));
+
   struct EasyFontVertex {
     float x, y;
     unsigned char color[4];
@@ -520,7 +526,9 @@ void drawText(Shader &shader, const std::string &text, float x, float y,
 
     auto appendVertex = [&](const EasyFontVertex &v) {
       vertices.push_back(x + v.x * scale);
+
       vertices.push_back(y + v.y * scale);
+
     };
 
     appendVertex(v0);
