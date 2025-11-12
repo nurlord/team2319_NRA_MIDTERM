@@ -328,7 +328,8 @@ int main() {
         glm::vec3(0.6f, 0.2f, 0.8f), glm::vec3(0.2f, 0.8f, 0.8f),
         glm::vec3(0.8f, 0.8f, 0.2f), glm::vec3(0.9f, 0.9f, 0.9f)};
 
-    float cellTextScale = 0.45f * (float)fbH / 1080.0f;
+    float resolutionScale = (float)fbH / 1080.0f;
+
     for (int x = 0; x < board.width; ++x) {
       for (int y = 0; y < board.height; ++y) {
         const Cell &cell = board.get(x, y);
@@ -357,7 +358,10 @@ int main() {
       }
     }
 
-    float overlayScale = 0.7f * (float)fbH / 1080.0f;
+
+    float overlayScale = 2.4f * resolutionScale;
+
+
     if (inMenu) {
       drawCenteredText(textShader, "3D Minesweeper", fbW * 0.5f,
                        fbH * 0.75f, overlayScale * 1.3f, glm::vec3(0.9f), fbW,
