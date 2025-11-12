@@ -16,7 +16,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <limits>
 
 // Window settings (initial only)
 const unsigned int SCR_WIDTH = 1920;
@@ -49,16 +48,6 @@ void drawText(Shader &shader, const std::string &text, float x, float y,
 void drawCenteredText(Shader &shader, const std::string &text, float centerX,
                       float centerY, float scale, const glm::vec3 &color,
                       int fbW, int fbH);
-
-struct TextMesh {
-  std::vector<float> vertices;
-  float width = 0.0f;
-  float height = 0.0f;
-};
-
-bool buildTextMesh(const std::string &text, float scale, TextMesh &outMesh);
-void renderTextMesh(Shader &shader, const TextMesh &mesh,
-                    const glm::vec3 &color, int fbW, int fbH);
 
 static glm::mat4 makePerspectiveFromFramebuffer(GLFWwindow *w) {
   int fbW = 0, fbH = 0;
@@ -340,7 +329,6 @@ int main() {
         glm::vec3(0.8f, 0.8f, 0.2f), glm::vec3(0.9f, 0.9f, 0.9f)};
 
     float resolutionScale = (float)fbH / 1080.0f;
-    float cellTextScale = 2.8f * resolutionScale;
     for (int x = 0; x < board.width; ++x) {
       for (int y = 0; y < board.height; ++y) {
         const Cell &cell = board.get(x, y);
@@ -369,7 +357,12 @@ int main() {
       }
     }
 
+
+
     float overlayScale = 2.4f * resolutionScale;
+
+
+
     if (inMenu) {
       drawCenteredText(textShader, "3D Minesweeper", fbW * 0.5f,
                        fbH * 0.75f, overlayScale * 1.3f, glm::vec3(0.9f), fbW,
@@ -498,18 +491,22 @@ bool worldToScreen(const glm::vec3 &world, const glm::mat4 &view,
   return true;
 }
 
-bool buildTextMesh(const std::string &text, float scale, TextMesh &outMesh) {
-  if (text.empty() || scale <= 0.0f)
-    return false;
-
-  stb_easy_font_spacing(0.0f);
+void drawText(Shader &shader, const std::string &text, float x, float y,
+              float scale, const glm::vec3 &color, int fbW, int fbH) {
+  if (text.empty() || textVAO == 0 || textVBO == 0 || scale <= 0.0f)
+    return;
 
   char buffer[99999];
   int numQuads =
       stb_easy_font_print(0.0f, 0.0f, const_cast<char *>(text.c_str()), nullptr,
                           buffer, sizeof(buffer));
   if (numQuads <= 0)
-    return false;
+    return;
+
+
+  float textHeight =
+      static_cast<float>(
+          stb_easy_font_height(const_cast<char *>(text.c_str())));
 
   struct EasyFontVertex {
     float x, y;
@@ -517,47 +514,22 @@ bool buildTextMesh(const std::string &text, float scale, TextMesh &outMesh) {
     unsigned char padding[4];
   };
 
+  std::vector<float> vertices;
+  vertices.reserve(numQuads * 6 * 2);
+
   auto *quadVertices = reinterpret_cast<EasyFontVertex *>(buffer);
-
-  float minX = std::numeric_limits<float>::max();
-  float maxX = std::numeric_limits<float>::lowest();
-  float minY = std::numeric_limits<float>::max();
-  float maxY = std::numeric_limits<float>::lowest();
-
-  for (int i = 0; i < numQuads * 4; ++i) {
-    const EasyFontVertex &v = quadVertices[i];
-    minX = std::min(minX, v.x);
-    maxX = std::max(maxX, v.x);
-    minY = std::min(minY, v.y);
-    maxY = std::max(maxY, v.y);
-  }
-
-  float widthUnits = std::max(0.0f, maxX - minX);
-  float heightUnits = std::max(0.0f, maxY - minY);
-  if (widthUnits <= 0.0f)
-    widthUnits = static_cast<float>(
-        stb_easy_font_width(const_cast<char *>(text.c_str())));
-  if (heightUnits <= 0.0f)
-    heightUnits = static_cast<float>(
-        stb_easy_font_height(const_cast<char *>(text.c_str())));
-  outMesh.width = widthUnits * scale;
-  outMesh.height = heightUnits * scale;
-
-  outMesh.vertices.clear();
-  outMesh.vertices.reserve(numQuads * 6 * 2);
-
-  auto appendVertex = [&](const EasyFontVertex &v) {
-    float localX = (v.x - minX) * scale;
-    float localY = -(v.y - minY) * scale;
-    outMesh.vertices.push_back(localX);
-    outMesh.vertices.push_back(localY);
-  };
-
   for (int i = 0; i < numQuads; ++i) {
     const EasyFontVertex &v0 = quadVertices[i * 4 + 0];
     const EasyFontVertex &v1 = quadVertices[i * 4 + 1];
     const EasyFontVertex &v2 = quadVertices[i * 4 + 2];
     const EasyFontVertex &v3 = quadVertices[i * 4 + 3];
+
+    auto appendVertex = [&](const EasyFontVertex &v) {
+      vertices.push_back(x + v.x * scale);
+
+      vertices.push_back(y + v.y * scale);
+
+    };
 
     appendVertex(v0);
     appendVertex(v1);
@@ -567,12 +539,7 @@ bool buildTextMesh(const std::string &text, float scale, TextMesh &outMesh) {
     appendVertex(v3);
   }
 
-  return !outMesh.vertices.empty();
-}
-
-void renderTextMesh(Shader &shader, const TextMesh &mesh,
-                    const glm::vec3 &color, int fbW, int fbH) {
-  if (mesh.vertices.empty() || textVAO == 0 || textVBO == 0)
+  if (vertices.empty())
     return;
 
   shader.use();
@@ -582,41 +549,22 @@ void renderTextMesh(Shader &shader, const TextMesh &mesh,
 
   glBindVertexArray(textVAO);
   glBindBuffer(GL_ARRAY_BUFFER, textVBO);
-  glBufferData(GL_ARRAY_BUFFER, mesh.vertices.size() * sizeof(float),
-               mesh.vertices.data(), GL_DYNAMIC_DRAW);
-  glDrawArrays(GL_TRIANGLES, 0, (GLsizei)(mesh.vertices.size() / 2));
+  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(),
+               GL_DYNAMIC_DRAW);
+  glDrawArrays(GL_TRIANGLES, 0, (GLsizei)(vertices.size() / 2));
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
-}
-
-void drawText(Shader &shader, const std::string &text, float x, float y,
-              float scale, const glm::vec3 &color, int fbW, int fbH) {
-  TextMesh mesh;
-  if (!buildTextMesh(text, scale, mesh))
-    return;
-
-  for (size_t i = 0; i < mesh.vertices.size(); i += 2) {
-    mesh.vertices[i] += x;
-    mesh.vertices[i + 1] += y;
-  }
-
-  renderTextMesh(shader, mesh, color, fbW, fbH);
 }
 
 void drawCenteredText(Shader &shader, const std::string &text, float centerX,
                       float centerY, float scale, const glm::vec3 &color,
                       int fbW, int fbH) {
-  TextMesh mesh;
-  if (!buildTextMesh(text, scale, mesh))
+  if (text.empty())
     return;
 
-  float posX = centerX - mesh.width * 0.5f;
-  float posY = centerY + mesh.height * 0.5f;
-
-  for (size_t i = 0; i < mesh.vertices.size(); i += 2) {
-    mesh.vertices[i] += posX;
-    mesh.vertices[i + 1] += posY;
-  }
-
-  renderTextMesh(shader, mesh, color, fbW, fbH);
+  int textWidth = stb_easy_font_width(const_cast<char *>(text.c_str()));
+  int textHeight = stb_easy_font_height(const_cast<char *>(text.c_str()));
+  float posX = centerX - (float)textWidth * scale * 0.5f;
+  float posY = centerY - (float)textHeight * scale * 0.5f;
+  drawText(shader, text, posX, posY, scale, color, fbW, fbH);
 }
