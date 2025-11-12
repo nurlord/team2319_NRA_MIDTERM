@@ -87,15 +87,14 @@ void Board::toggleFlag(int x, int y) {
     get(x, y).state = CellState::Hidden;
 }
 
-void Board::reveal(int x, int y) {
+bool Board::reveal(int x, int y) {
   auto &c = get(x, y);
   if (c.state != CellState::Hidden)
-    return;
+    return false;
   c.state = CellState::Revealed;
 
   if (c.type == CellType::Mine) {
-    // Game over
-    return;
+    return true;
   }
 
   if (c.neighborMines == 0) {
@@ -107,5 +106,14 @@ void Board::reveal(int x, int y) {
         if (nx >= 0 && nx < width && ny >= 0 && ny < height)
           reveal(nx, ny);
       }
+  }
+
+  return false;
+}
+
+void Board::revealAllMines() {
+  for (auto &cell : cells) {
+    if (cell.type == CellType::Mine)
+      cell.state = CellState::Revealed;
   }
 }
