@@ -10,6 +10,7 @@
 #include "Minesweeper/Camera.h"
 #include "Minesweeper/Cube.h"
 #include "Minesweeper/Board.h"
+#include "Minesweeper/Skybox.h"
 
 #include <algorithm>
 #include <array>
@@ -265,33 +266,7 @@ int main() {
   // Shaders
   Shader cubeShader("shaders/cube.vert", "shaders/cube.frag");
   Shader textShader("shaders/text.vert", "shaders/text.frag");
-  Shader backgroundShader("shaders/background.vert", "shaders/background.frag");
-
-  unsigned int backgroundVAO = 0, backgroundVBO = 0;
-  {
-    const float quadVertices[] = {
-        // positions   // uvs
-        -1.0f, -1.0f, 0.0f, 0.0f,
-        1.0f,  -1.0f, 1.0f, 0.0f,
-        -1.0f, 1.0f,  0.0f, 1.0f,
-        -1.0f, 1.0f,  0.0f, 1.0f,
-        1.0f,  -1.0f, 1.0f, 0.0f,
-        1.0f,  1.0f,  1.0f, 1.0f};
-
-    glGenVertexArrays(1, &backgroundVAO);
-    glGenBuffers(1, &backgroundVBO);
-    glBindVertexArray(backgroundVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, backgroundVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices,
-                 GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
-                          (void *)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
-                          (void *)(2 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    glBindVertexArray(0);
-  }
+  Shader skyboxShader("shaders/skybox.vert", "shaders/skybox.frag");
 
   // Text rendering setup
   glGenVertexArrays(1, &textVAO);
@@ -306,6 +281,7 @@ int main() {
 
   // Cube object
   Cube cube;
+  Skybox skybox;
 
   // Game/render loop
   while (!glfwWindowShouldClose(window)) {
@@ -334,9 +310,30 @@ int main() {
     glm::mat4 projection = makePerspectiveFromFramebuffer(window);
     glm::mat4 view = camera.GetViewMatrix();
 
+    glDepthMask(GL_FALSE);
+    glDepthFunc(GL_LEQUAL);
+    skyboxShader.use();
+    skyboxShader.setMat4("projection", projection);
+    skyboxShader.setMat4("view", glm::mat4(glm::mat3(view)));
+    skyboxShader.setFloat("time", currentFrame);
+    skybox.Draw();
+    glDepthFunc(GL_LESS);
+    glDepthMask(GL_TRUE);
+
     cubeShader.use();
     cubeShader.setMat4("projection", projection);
     cubeShader.setMat4("view", view);
+    cubeShader.setVec3("cameraPos", camera.Position);
+    cubeShader.setFloat("time", currentFrame);
+
+    const glm::vec3 hiddenColor(0.18f, 0.26f, 0.38f);
+    const glm::vec3 hiddenBorderColor(0.03f, 0.05f, 0.09f);
+    const glm::vec3 revealedColor(0.86f, 0.9f, 0.96f);
+    const glm::vec3 revealedBorderColor(0.46f, 0.56f, 0.78f);
+    const glm::vec3 flaggedColor(0.9f, 0.34f, 0.26f);
+    const glm::vec3 flaggedBorderColor(0.55f, 0.14f, 0.1f);
+    const glm::vec3 mineColor(0.96f, 0.28f, 0.35f);
+    const glm::vec3 mineBorderColor(0.6f, 0.12f, 0.18f);
 
     const glm::vec3 hiddenColor(0.16f, 0.23f, 0.33f);
     const glm::vec3 hiddenBorderColor(0.07f, 0.1f, 0.15f);
@@ -374,10 +371,12 @@ int main() {
 
         cubeShader.setMat4("model", borderModel);
         cubeShader.setVec3("color", borderColor);
+        cubeShader.setFloat("reflectivity", 0.6f);
         cube.Draw(cubeShader, borderModel);
 
         cubeShader.setMat4("model", tileModel);
         cubeShader.setVec3("color", faceColor);
+        cubeShader.setFloat("reflectivity", 0.35f);
         cube.Draw(cubeShader, tileModel);
       }
     }
