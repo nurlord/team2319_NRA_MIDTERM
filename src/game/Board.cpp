@@ -1,9 +1,10 @@
 #include "Minesweeper/Board.h"
 #include <cstdlib>
 #include <ctime>
+#include <vector>
 
 Board::Board(int w, int h, int mines)
-    : width(w), height(h), mineCount(mines), cells(w * h) {
+    : width(w), height(h), mineCount(mines), cells(w * h), firstMove(true) {
   srand(time(nullptr));
   reset();
 }
@@ -48,6 +49,8 @@ void Board::reset() {
     c.neighborMines = 0;
   }
 
+  firstMove = true;
+
   // place mines
   int placed = 0;
   while (placed < mineCount) {
@@ -88,16 +91,26 @@ void Board::toggleFlag(int x, int y) {
 }
 
 bool Board::reveal(int x, int y) {
-  auto &c = get(x, y);
-  if (c.state != CellState::Hidden)
+  Cell &cell = get(x, y);
+  if (cell.state != CellState::Hidden)
     return false;
-  c.state = CellState::Revealed;
 
-  if (c.type == CellType::Mine) {
+  if (firstMove) {
+    firstMove = false;
+    if (cell.type == CellType::Mine) {
+      relocateMine(x, y);
+    }
+  }
+
+  if (cell.state != CellState::Hidden)
+    return false;
+  cell.state = CellState::Revealed;
+
+  if (cell.type == CellType::Mine) {
     return true;
   }
 
-  if (c.neighborMines == 0) {
+  if (cell.neighborMines == 0) {
     for (int dy = -1; dy <= 1; ++dy)
       for (int dx = -1; dx <= 1; ++dx) {
         if (dx == 0 && dy == 0)
@@ -116,4 +129,27 @@ void Board::revealAllMines() {
     if (cell.type == CellType::Mine)
       cell.state = CellState::Revealed;
   }
+}
+
+void Board::relocateMine(int safeX, int safeY) {
+  const int safeIndex = safeY * width + safeX;
+  cells[safeIndex].type = CellType::Empty;
+  cells[safeIndex].state = CellState::Hidden;
+
+  std::vector<int> candidates;
+  candidates.reserve(cells.size());
+  for (int i = 0; i < static_cast<int>(cells.size()); ++i) {
+    if (i == safeIndex)
+      continue;
+    if (cells[i].type != CellType::Mine)
+      candidates.push_back(i);
+  }
+
+  if (!candidates.empty()) {
+    int targetIndex = candidates[rand() % candidates.size()];
+    cells[targetIndex].type = CellType::Mine;
+    cells[targetIndex].state = CellState::Hidden;
+  }
+
+  calculateNumbers();
 }

@@ -18,4 +18,8 @@ public:
   void calculateNumbers(); // add this declaration
   bool checkWin();         // add this declaration
   void revealAllMines();
+
+private:
+  bool firstMove = true;
+  void relocateMine(int safeX, int safeY);
 };

@@ -69,8 +69,9 @@ static glm::mat4 makePerspectiveFromFramebuffer(GLFWwindow *w) {
 
 static inline glm::vec3 gridCenter(int x, int y, const Board &b) {
   // Center grid precisely: use (dim-1)/2.0f, not integer dim/2
-  float gx = (x - (b.width - 1) * 0.5f) * 1.2f;
-  float gy = (y - (b.height - 1) * 0.5f) * 1.2f;
+  const float spacing = 1.05f;
+  float gx = (x - (b.width - 1) * 0.5f) * spacing;
+  float gy = (y - (b.height - 1) * 0.5f) * spacing;
   return glm::vec3(gx, gy, 0.0f);
 }
 
@@ -210,8 +211,8 @@ void mouse_button_callback(GLFWwindow *window, int button, int action,
 }
 
 // Camera setup
-Camera camera(glm::vec3(0.0f, 0.0f, 5.0f));
-Board board(5, 5, 5); // 5x5 board, 5 mines
+Camera camera(glm::vec3(0.0f, 0.0f, 15.0f));
+Board board(12, 12, 28); // larger board for denser gameplay
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -281,6 +282,8 @@ int main() {
 
   // Game/render loop
   while (!glfwWindowShouldClose(window)) {
+    glfwPollEvents();
+
     float currentFrame = (float)glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
@@ -300,6 +303,16 @@ int main() {
     cubeShader.setMat4("projection", projection);
     cubeShader.setMat4("view", view);
 
+    const glm::vec3 hiddenColor(0.18f, 0.24f, 0.35f);
+    const glm::vec3 flaggedColor(0.85f, 0.35f, 0.35f);
+    const glm::vec3 mineColor(0.9f, 0.25f, 0.25f);
+    const glm::vec3 emptyColor(0.82f, 0.86f, 0.92f);
+    const std::array<glm::vec3, 8> tileNumberColors = {
+        glm::vec3(0.32f, 0.62f, 1.0f), glm::vec3(0.38f, 0.85f, 0.45f),
+        glm::vec3(0.95f, 0.45f, 0.45f), glm::vec3(0.65f, 0.45f, 0.95f),
+        glm::vec3(0.95f, 0.7f, 0.35f), glm::vec3(0.35f, 0.85f, 0.85f),
+        glm::vec3(0.9f, 0.85f, 0.4f), glm::vec3(0.95f, 0.95f, 0.95f)};
+
     for (int x = 0; x < board.width; ++x) {
       for (int y = 0; y < board.height; ++y) {
         const Cell &cell = board.get(x, y);
@@ -307,18 +320,17 @@ int main() {
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, gridCenter(x, y, board));
 
-        glm::vec3 color;
+        glm::vec3 color = hiddenColor;
         if (cell.state == CellState::Revealed) {
           if (cell.type == CellType::Mine)
-            color = glm::vec3(1.0f, 0.2f, 0.2f);
+            color = mineColor;
           else if (cell.neighborMines > 0)
-            color = glm::vec3(0.2f, 0.5f + 0.1f * cell.neighborMines, 0.2f);
+            color = tileNumberColors[std::min(cell.neighborMines, 8) - 1];
           else
-            color = glm::vec3(0.2f, 1.0f, 0.2f);
-        } else if (cell.state == CellState::Flagged)
-          color = glm::vec3(1.0f, 1.0f, 0.2f);
-        else
-          color = glm::vec3(0.2f, 0.4f, 1.0f);
+            color = emptyColor;
+        } else if (cell.state == CellState::Flagged) {
+          color = flaggedColor;
+        }
 
         cubeShader.setMat4("model", model);
         cubeShader.setVec3("color", color);
@@ -334,10 +346,10 @@ int main() {
     glDisable(GL_DEPTH_TEST);
 
     const std::array<glm::vec3, 8> numberColors = {
-        glm::vec3(0.2f, 0.6f, 1.0f), glm::vec3(0.2f, 0.8f, 0.2f),
-        glm::vec3(0.9f, 0.3f, 0.3f), glm::vec3(0.8f, 0.5f, 0.2f),
-        glm::vec3(0.6f, 0.2f, 0.8f), glm::vec3(0.2f, 0.8f, 0.8f),
-        glm::vec3(0.8f, 0.8f, 0.2f), glm::vec3(0.9f, 0.9f, 0.9f)};
+        glm::vec3(0.32f, 0.68f, 1.0f), glm::vec3(0.35f, 0.9f, 0.45f),
+        glm::vec3(0.98f, 0.45f, 0.45f), glm::vec3(0.7f, 0.5f, 0.98f),
+        glm::vec3(0.98f, 0.72f, 0.4f), glm::vec3(0.45f, 0.9f, 0.9f),
+        glm::vec3(0.95f, 0.88f, 0.45f), glm::vec3(0.96f, 0.96f, 0.96f)};
 
     float resolutionScale = (float)fbH / 1080.0f;
     float cellTextScale = 4.2f * resolutionScale;
@@ -397,7 +409,6 @@ int main() {
     glEnable(GL_DEPTH_TEST);
 
     glfwSwapBuffers(window);
-    glfwPollEvents();
   }
 
   glfwTerminate();
