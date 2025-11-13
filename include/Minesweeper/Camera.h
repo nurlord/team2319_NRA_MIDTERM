@@ -2,7 +2,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-enum Camera_Movement { FORWARD, BACKWARD, LEFT, RIGHT };
+enum Camera_Movement { FORWARD, BACKWARD, LEFT, RIGHT, UP, DOWN };
 
 class Camera {
 public:
@@ -38,6 +38,10 @@ public:
       Position -= Right * velocity;
     if (direction == RIGHT)
       Position += Right * velocity;
+    if (direction == UP)
+      Position += WorldUp * velocity;
+    if (direction == DOWN)
+      Position -= WorldUp * velocity;
   }
 
   void ProcessMouseMovement(float xoffset, float yoffset,
