@@ -326,6 +326,14 @@ int main() {
     glClearColor(0.05f, 0.07f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glDisable(GL_DEPTH_TEST);
+    backgroundShader.use();
+    backgroundShader.setFloat("time", currentFrame);
+    glBindVertexArray(backgroundVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+    glEnable(GL_DEPTH_TEST);
+
     glm::mat4 projection = makePerspectiveFromFramebuffer(window);
     glm::mat4 view = camera.GetViewMatrix();
 
