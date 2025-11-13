@@ -69,8 +69,7 @@ void Cube::setupCube() {
   glBindVertexArray(0);
 }
 
-void Cube::Draw(const Shader &shader, const glm::mat4 &model) const {
-  shader.setMat4("model", model);
+void Cube::Draw() const {
   glBindVertexArray(VAO);
   glDrawArrays(GL_TRIANGLES, 0, 36);
   glBindVertexArray(0);

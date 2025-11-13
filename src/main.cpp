@@ -381,12 +381,12 @@ int main() {
         cubeShader.setMat4("model", borderModel);
         cubeShader.setVec3("color", palette.border);
         cubeShader.setFloat("reflectivity", 0.6f);
-        cube.Draw(cubeShader, borderModel);
+        cube.Draw();
 
         cubeShader.setMat4("model", tileModel);
         cubeShader.setVec3("color", palette.face);
         cubeShader.setFloat("reflectivity", 0.35f);
-        cube.Draw(cubeShader, tileModel);
+        cube.Draw();
       }
     }
 
