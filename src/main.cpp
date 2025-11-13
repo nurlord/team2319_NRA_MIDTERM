@@ -329,6 +329,7 @@ int main() {
         glm::vec3(0.8f, 0.8f, 0.2f), glm::vec3(0.9f, 0.9f, 0.9f)};
 
     float resolutionScale = (float)fbH / 1080.0f;
+    float cellTextScale = 2.8f * resolutionScale;
     for (int x = 0; x < board.width; ++x) {
       for (int y = 0; y < board.height; ++y) {
         const Cell &cell = board.get(x, y);
@@ -357,19 +358,13 @@ int main() {
       }
     }
 
-
-
     float overlayScale = 2.4f * resolutionScale;
 
-
-
     if (inMenu) {
-      drawCenteredText(textShader, "3D Minesweeper", fbW * 0.5f,
-                       fbH * 0.75f, overlayScale * 1.3f, glm::vec3(0.9f), fbW,
-                       fbH);
-      drawCenteredText(textShader,
-                       "Left Click: Reveal   Right Click: Flag", fbW * 0.5f,
-                       fbH * 0.6f, overlayScale * 0.6f,
+      drawCenteredText(textShader, "3D Minesweeper", fbW * 0.5f, fbH * 0.75f,
+                       overlayScale * 1.3f, glm::vec3(0.9f), fbW, fbH);
+      drawCenteredText(textShader, "Left Click: Reveal   Right Click: Flag",
+                       fbW * 0.5f, fbH * 0.6f, overlayScale * 0.6f,
                        glm::vec3(0.8f, 0.8f, 0.8f), fbW, fbH);
       drawCenteredText(textShader, "Press Enter to start", fbW * 0.5f,
                        fbH * 0.45f, overlayScale * 0.8f,
@@ -503,10 +498,8 @@ void drawText(Shader &shader, const std::string &text, float x, float y,
   if (numQuads <= 0)
     return;
 
-
-  float textHeight =
-      static_cast<float>(
-          stb_easy_font_height(const_cast<char *>(text.c_str())));
+  float textHeight = static_cast<float>(
+      stb_easy_font_height(const_cast<char *>(text.c_str())));
 
   struct EasyFontVertex {
     float x, y;
@@ -528,7 +521,6 @@ void drawText(Shader &shader, const std::string &text, float x, float y,
       vertices.push_back(x + v.x * scale);
 
       vertices.push_back(y + v.y * scale);
-
     };
 
     appendVertex(v0);
@@ -549,8 +541,8 @@ void drawText(Shader &shader, const std::string &text, float x, float y,
 
   glBindVertexArray(textVAO);
   glBindBuffer(GL_ARRAY_BUFFER, textVBO);
-  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(),
-               GL_DYNAMIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float),
+               vertices.data(), GL_DYNAMIC_DRAW);
   glDrawArrays(GL_TRIANGLES, 0, (GLsizei)(vertices.size() / 2));
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
