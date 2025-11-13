@@ -9,11 +9,130 @@
       "-g",
       "-c",
       "-o",
+      "src/game/Board.o",
+      "src/game/Board.cpp"
+    ],
+    "directory": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM",
+    "file": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/game/Board.cpp",
+    "output": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/game/Board.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Iinclude",
+      "-Wall",
+      "-Wextra",
+      "-std=c++17",
+      "-g",
+      "-c",
+      "-o",
+      "src/game/Cell.o",
+      "src/game/Cell.cpp"
+    ],
+    "directory": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM",
+    "file": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/game/Cell.cpp",
+    "output": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/game/Cell.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Iinclude",
+      "-Wall",
+      "-Wextra",
+      "-std=c++17",
+      "-g",
+      "-c",
+      "-o",
       "src/main.o",
       "src/main.cpp"
     ],
     "directory": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM",
     "file": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/main.cpp",
     "output": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/main.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Iinclude",
+      "-Wall",
+      "-Wextra",
+      "-std=c++17",
+      "-g",
+      "-c",
+      "-o",
+      "src/renderer/Skybox.o",
+      "src/renderer/Skybox.cpp"
+    ],
+    "directory": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM",
+    "file": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/renderer/Skybox.cpp",
+    "output": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/renderer/Skybox.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Iinclude",
+      "-Wall",
+      "-Wextra",
+      "-std=c++17",
+      "-g",
+      "-c",
+      "-o",
+      "src/renderer/Cube.o",
+      "src/renderer/Cube.cpp"
+    ],
+    "directory": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM",
+    "file": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/renderer/Cube.cpp",
+    "output": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/renderer/Cube.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Iinclude",
+      "-Wall",
+      "-Wextra",
+      "-std=c++17",
+      "-g",
+      "-c",
+      "-o",
+      "src/renderer/Camera.o",
+      "src/renderer/Camera.cpp"
+    ],
+    "directory": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM",
+    "file": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/renderer/Camera.cpp",
+    "output": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/renderer/Camera.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Iinclude",
+      "-Wall",
+      "-Wextra",
+      "-std=c++17",
+      "-g",
+      "-c",
+      "-o",
+      "src/renderer/Shader.o",
+      "src/renderer/Shader.cpp"
+    ],
+    "directory": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM",
+    "file": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/renderer/Shader.cpp",
+    "output": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/renderer/Shader.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Iinclude",
+      "-Wall",
+      "-Wextra",
+      "-std=c11",
+      "-g",
+      "-c",
+      "-o",
+      "src/glad.o",
+      "src/glad.c"
+    ],
+    "directory": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM",
+    "file": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/glad.c",
+    "output": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/glad.o"
   }
 ]
