@@ -9,40 +9,6 @@
       "-g",
       "-c",
       "-o",
-      "src/game/Board.o",
-      "src/game/Board.cpp"
-    ],
-    "directory": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM",
-    "file": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/game/Board.cpp",
-    "output": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/game/Board.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/g++",
-      "-Iinclude",
-      "-Wall",
-      "-Wextra",
-      "-std=c++17",
-      "-g",
-      "-c",
-      "-o",
-      "src/game/Cell.o",
-      "src/game/Cell.cpp"
-    ],
-    "directory": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM",
-    "file": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/game/Cell.cpp",
-    "output": "/home/nurzat/moodle/cgf/team2319_NRA_MIDTERM/src/game/Cell.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/g++",
-      "-Iinclude",
-      "-Wall",
-      "-Wextra",
-      "-std=c++17",
-      "-g",
-      "-c",
-      "-o",
       "src/main.o",
       "src/main.cpp"
     ],
