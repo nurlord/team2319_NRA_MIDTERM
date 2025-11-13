@@ -40,6 +40,28 @@ bool menuPressedLast = false;
 unsigned int textVAO = 0;
 unsigned int textVBO = 0;
 
+namespace {
+struct TilePalette {
+  glm::vec3 face;
+  glm::vec3 border;
+};
+
+const TilePalette kHiddenPalette{glm::vec3(0.18f, 0.26f, 0.38f),
+                                 glm::vec3(0.03f, 0.05f, 0.09f)};
+const TilePalette kRevealedPalette{glm::vec3(0.86f, 0.9f, 0.96f),
+                                   glm::vec3(0.46f, 0.56f, 0.78f)};
+const TilePalette kFlaggedPalette{glm::vec3(0.9f, 0.34f, 0.26f),
+                                  glm::vec3(0.55f, 0.14f, 0.1f)};
+const TilePalette kMinePalette{glm::vec3(0.96f, 0.28f, 0.35f),
+                               glm::vec3(0.6f, 0.12f, 0.18f)};
+
+const std::array<glm::vec3, 8> kNumberColors = {
+    glm::vec3(0.32f, 0.68f, 1.0f), glm::vec3(0.35f, 0.9f, 0.45f),
+    glm::vec3(0.98f, 0.45f, 0.45f), glm::vec3(0.7f, 0.5f, 0.98f),
+    glm::vec3(0.98f, 0.72f, 0.4f), glm::vec3(0.45f, 0.9f, 0.9f),
+    glm::vec3(0.95f, 0.88f, 0.45f), glm::vec3(0.96f, 0.96f, 0.96f)};
+} // namespace
+
 void startNewGame(GLFWwindow *window);
 void updateCursorMode(GLFWwindow *window);
 bool worldToScreen(const glm::vec3 &world, const glm::mat4 &view,
@@ -268,6 +290,11 @@ int main() {
   Shader textShader("shaders/text.vert", "shaders/text.frag");
   Shader skyboxShader("shaders/skybox.vert", "shaders/skybox.frag");
 
+  cubeShader.use();
+  cubeShader.setInt("skyboxMap", 0);
+  skyboxShader.use();
+  skyboxShader.setInt("skyboxMap", 0);
+
   // Text rendering setup
   glGenVertexArrays(1, &textVAO);
   glGenBuffers(1, &textVBO);
@@ -316,6 +343,8 @@ int main() {
     skyboxShader.setMat4("projection", projection);
     skyboxShader.setMat4("view", glm::mat4(glm::mat3(view)));
     skyboxShader.setFloat("time", currentFrame);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.texture());
     skybox.Draw();
     glDepthFunc(GL_LESS);
     glDepthMask(GL_TRUE);
@@ -325,24 +354,8 @@ int main() {
     cubeShader.setMat4("view", view);
     cubeShader.setVec3("cameraPos", camera.Position);
     cubeShader.setFloat("time", currentFrame);
-
-    const glm::vec3 hiddenColor(0.18f, 0.26f, 0.38f);
-    const glm::vec3 hiddenBorderColor(0.03f, 0.05f, 0.09f);
-    const glm::vec3 revealedColor(0.86f, 0.9f, 0.96f);
-    const glm::vec3 revealedBorderColor(0.46f, 0.56f, 0.78f);
-    const glm::vec3 flaggedColor(0.9f, 0.34f, 0.26f);
-    const glm::vec3 flaggedBorderColor(0.55f, 0.14f, 0.1f);
-    const glm::vec3 mineColor(0.96f, 0.28f, 0.35f);
-    const glm::vec3 mineBorderColor(0.6f, 0.12f, 0.18f);
-
-    const glm::vec3 hiddenColor(0.16f, 0.23f, 0.33f);
-    const glm::vec3 hiddenBorderColor(0.07f, 0.1f, 0.15f);
-    const glm::vec3 revealedColor(0.83f, 0.88f, 0.96f);
-    const glm::vec3 revealedBorderColor(0.58f, 0.68f, 0.84f);
-    const glm::vec3 flaggedColor(0.88f, 0.32f, 0.32f);
-    const glm::vec3 flaggedBorderColor(0.52f, 0.16f, 0.16f);
-    const glm::vec3 mineColor(0.95f, 0.28f, 0.28f);
-    const glm::vec3 mineBorderColor(0.55f, 0.15f, 0.15f);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.texture());
 
     for (int x = 0; x < board.width; ++x) {
       for (int y = 0; y < board.height; ++y) {
@@ -351,31 +364,27 @@ int main() {
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, gridCenter(x, y, board));
 
-        glm::vec3 faceColor = hiddenColor;
-        glm::vec3 borderColor = hiddenBorderColor;
+        TilePalette palette = kHiddenPalette;
         if (cell.state == CellState::Revealed) {
           if (cell.type == CellType::Mine) {
-            faceColor = mineColor;
-            borderColor = mineBorderColor;
+            palette = kMinePalette;
           } else {
-            faceColor = revealedColor;
-            borderColor = revealedBorderColor;
+            palette = kRevealedPalette;
           }
         } else if (cell.state == CellState::Flagged) {
-          faceColor = flaggedColor;
-          borderColor = flaggedBorderColor;
+          palette = kFlaggedPalette;
         }
 
         glm::mat4 borderModel = glm::scale(model, glm::vec3(1.04f));
         glm::mat4 tileModel = glm::scale(model, glm::vec3(0.92f));
 
         cubeShader.setMat4("model", borderModel);
-        cubeShader.setVec3("color", borderColor);
+        cubeShader.setVec3("color", palette.border);
         cubeShader.setFloat("reflectivity", 0.6f);
         cube.Draw(cubeShader, borderModel);
 
         cubeShader.setMat4("model", tileModel);
-        cubeShader.setVec3("color", faceColor);
+        cubeShader.setVec3("color", palette.face);
         cubeShader.setFloat("reflectivity", 0.35f);
         cube.Draw(cubeShader, tileModel);
       }
@@ -387,12 +396,6 @@ int main() {
     }
 
     glDisable(GL_DEPTH_TEST);
-
-    const std::array<glm::vec3, 8> numberColors = {
-        glm::vec3(0.32f, 0.68f, 1.0f), glm::vec3(0.35f, 0.9f, 0.45f),
-        glm::vec3(0.98f, 0.45f, 0.45f), glm::vec3(0.7f, 0.5f, 0.98f),
-        glm::vec3(0.98f, 0.72f, 0.4f), glm::vec3(0.45f, 0.9f, 0.9f),
-        glm::vec3(0.95f, 0.88f, 0.45f), glm::vec3(0.96f, 0.96f, 0.96f)};
 
     float resolutionScale = (float)fbH / 1080.0f;
     float cellTextScale = 4.2f * resolutionScale;
@@ -412,7 +415,7 @@ int main() {
           } else if (cell.neighborMines > 0) {
             std::string numberText = std::to_string(cell.neighborMines);
             glm::vec3 numberColor =
-                numberColors[std::min(cell.neighborMines, 8) - 1];
+                kNumberColors[std::min(cell.neighborMines, 8) - 1];
             drawCenteredText(textShader, numberText, screenPos.x, screenPos.y,
                              cellTextScale, numberColor, fbW, fbH);
           }
