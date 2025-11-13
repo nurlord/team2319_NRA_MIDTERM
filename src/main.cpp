@@ -265,6 +265,33 @@ int main() {
   // Shaders
   Shader cubeShader("shaders/cube.vert", "shaders/cube.frag");
   Shader textShader("shaders/text.vert", "shaders/text.frag");
+  Shader backgroundShader("shaders/background.vert", "shaders/background.frag");
+
+  unsigned int backgroundVAO = 0, backgroundVBO = 0;
+  {
+    const float quadVertices[] = {
+        // positions   // uvs
+        -1.0f, -1.0f, 0.0f, 0.0f,
+        1.0f,  -1.0f, 1.0f, 0.0f,
+        -1.0f, 1.0f,  0.0f, 1.0f,
+        -1.0f, 1.0f,  0.0f, 1.0f,
+        1.0f,  -1.0f, 1.0f, 0.0f,
+        1.0f,  1.0f,  1.0f, 1.0f};
+
+    glGenVertexArrays(1, &backgroundVAO);
+    glGenBuffers(1, &backgroundVBO);
+    glBindVertexArray(backgroundVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, backgroundVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices,
+                 GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+                          (void *)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+                          (void *)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
+  }
 
   // Text rendering setup
   glGenVertexArrays(1, &textVAO);
@@ -293,8 +320,16 @@ int main() {
     int fbW = 0, fbH = 0;
     glfwGetFramebufferSize(window, &fbW, &fbH);
 
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClearColor(0.05f, 0.07f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glDisable(GL_DEPTH_TEST);
+    backgroundShader.use();
+    backgroundShader.setFloat("time", currentFrame);
+    glBindVertexArray(backgroundVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+    glEnable(GL_DEPTH_TEST);
 
     glm::mat4 projection = makePerspectiveFromFramebuffer(window);
     glm::mat4 view = camera.GetViewMatrix();
@@ -303,15 +338,14 @@ int main() {
     cubeShader.setMat4("projection", projection);
     cubeShader.setMat4("view", view);
 
-    const glm::vec3 hiddenColor(0.18f, 0.24f, 0.35f);
-    const glm::vec3 flaggedColor(0.85f, 0.35f, 0.35f);
-    const glm::vec3 mineColor(0.9f, 0.25f, 0.25f);
-    const glm::vec3 emptyColor(0.82f, 0.86f, 0.92f);
-    const std::array<glm::vec3, 8> tileNumberColors = {
-        glm::vec3(0.32f, 0.62f, 1.0f), glm::vec3(0.38f, 0.85f, 0.45f),
-        glm::vec3(0.95f, 0.45f, 0.45f), glm::vec3(0.65f, 0.45f, 0.95f),
-        glm::vec3(0.95f, 0.7f, 0.35f), glm::vec3(0.35f, 0.85f, 0.85f),
-        glm::vec3(0.9f, 0.85f, 0.4f), glm::vec3(0.95f, 0.95f, 0.95f)};
+    const glm::vec3 hiddenColor(0.16f, 0.23f, 0.33f);
+    const glm::vec3 hiddenBorderColor(0.07f, 0.1f, 0.15f);
+    const glm::vec3 revealedColor(0.83f, 0.88f, 0.96f);
+    const glm::vec3 revealedBorderColor(0.58f, 0.68f, 0.84f);
+    const glm::vec3 flaggedColor(0.88f, 0.32f, 0.32f);
+    const glm::vec3 flaggedBorderColor(0.52f, 0.16f, 0.16f);
+    const glm::vec3 mineColor(0.95f, 0.28f, 0.28f);
+    const glm::vec3 mineBorderColor(0.55f, 0.15f, 0.15f);
 
     for (int x = 0; x < board.width; ++x) {
       for (int y = 0; y < board.height; ++y) {
@@ -320,21 +354,31 @@ int main() {
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, gridCenter(x, y, board));
 
-        glm::vec3 color = hiddenColor;
+        glm::vec3 faceColor = hiddenColor;
+        glm::vec3 borderColor = hiddenBorderColor;
         if (cell.state == CellState::Revealed) {
-          if (cell.type == CellType::Mine)
-            color = mineColor;
-          else if (cell.neighborMines > 0)
-            color = tileNumberColors[std::min(cell.neighborMines, 8) - 1];
-          else
-            color = emptyColor;
+          if (cell.type == CellType::Mine) {
+            faceColor = mineColor;
+            borderColor = mineBorderColor;
+          } else {
+            faceColor = revealedColor;
+            borderColor = revealedBorderColor;
+          }
         } else if (cell.state == CellState::Flagged) {
-          color = flaggedColor;
+          faceColor = flaggedColor;
+          borderColor = flaggedBorderColor;
         }
 
-        cubeShader.setMat4("model", model);
-        cubeShader.setVec3("color", color);
-        cube.Draw(cubeShader, model);
+        glm::mat4 borderModel = glm::scale(model, glm::vec3(1.04f));
+        glm::mat4 tileModel = glm::scale(model, glm::vec3(0.92f));
+
+        cubeShader.setMat4("model", borderModel);
+        cubeShader.setVec3("color", borderColor);
+        cube.Draw(cubeShader, borderModel);
+
+        cubeShader.setMat4("model", tileModel);
+        cubeShader.setVec3("color", faceColor);
+        cube.Draw(cubeShader, tileModel);
       }
     }
 
@@ -434,6 +478,11 @@ void processInput(GLFWwindow *window) {
       camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
       camera.ProcessKeyboard(RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+      camera.ProcessKeyboard(UP, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+        glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS)
+      camera.ProcessKeyboard(DOWN, deltaTime);
   }
 
   int enterState = glfwGetKey(window, GLFW_KEY_ENTER);
