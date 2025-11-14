@@ -289,6 +289,7 @@ int main() {
   Shader cubeShader("shaders/cube.vert", "shaders/cube.frag");
   Shader textShader("shaders/text.vert", "shaders/text.frag");
   Shader skyboxShader("shaders/skybox.vert", "shaders/skybox.frag");
+  Shader backgroundShader("shaders/background.vert", "shaders/background.frag");
 
   cubeShader.use();
   cubeShader.setInt("skyboxMap", 0);
@@ -303,6 +304,44 @@ int main() {
   glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 2, nullptr, GL_DYNAMIC_DRAW);
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
+
+  unsigned int crosshairVAO = 0;
+  unsigned int crosshairVBO = 0;
+  glGenVertexArrays(1, &crosshairVAO);
+  glGenBuffers(1, &crosshairVBO);
+  glBindVertexArray(crosshairVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, crosshairVBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 48, nullptr, GL_DYNAMIC_DRAW);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
+
+  unsigned int backgroundVAO = 0;
+  unsigned int backgroundVBO = 0;
+  glGenVertexArrays(1, &backgroundVAO);
+  glGenBuffers(1, &backgroundVBO);
+  glBindVertexArray(backgroundVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, backgroundVBO);
+
+  const float backgroundVertices[] = {
+      -1.0f, -1.0f, 0.0f, 0.0f,
+      1.0f,  -1.0f, 1.0f, 0.0f,
+      1.0f,  1.0f,  1.0f, 1.0f,
+      -1.0f, -1.0f, 0.0f, 0.0f,
+      1.0f,  1.0f,  1.0f, 1.0f,
+      -1.0f, 1.0f,  0.0f, 1.0f};
+
+  glBufferData(GL_ARRAY_BUFFER, sizeof(backgroundVertices), backgroundVertices,
+               GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+                        (void *)0);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+                        (void *)(2 * sizeof(float)));
+  glEnableVertexAttribArray(1);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
 
@@ -398,6 +437,57 @@ int main() {
     glDisable(GL_DEPTH_TEST);
 
     float resolutionScale = (float)fbH / 1080.0f;
+
+    if (!inMenu && !gameOver) {
+      float centerX = fbW * 0.5f;
+      float centerY = fbH * 0.5f;
+      float halfThickness = 1.5f * resolutionScale;
+      float armLength = 14.0f * resolutionScale;
+      float gap = 6.0f * resolutionScale;
+
+      float leftStart = centerX - gap - armLength;
+      float leftEnd = centerX - gap;
+      float rightStart = centerX + gap;
+      float rightEnd = centerX + gap + armLength;
+      float topStart = centerY + gap;
+      float topEnd = centerY + gap + armLength;
+      float bottomStart = centerY - gap - armLength;
+      float bottomEnd = centerY - gap;
+
+      std::array<float, 48> crosshairVertices = {
+          // Left arm
+          leftStart, centerY - halfThickness, leftEnd, centerY - halfThickness,
+          leftEnd, centerY + halfThickness, leftStart, centerY - halfThickness,
+          leftEnd, centerY + halfThickness, leftStart, centerY + halfThickness,
+          // Right arm
+          rightStart, centerY - halfThickness, rightEnd, centerY - halfThickness,
+          rightEnd, centerY + halfThickness, rightStart, centerY - halfThickness,
+          rightEnd, centerY + halfThickness, rightStart, centerY + halfThickness,
+          // Top arm
+          centerX - halfThickness, topStart, centerX + halfThickness, topStart,
+          centerX + halfThickness, topEnd, centerX - halfThickness, topStart,
+          centerX + halfThickness, topEnd, centerX - halfThickness, topEnd,
+          // Bottom arm
+          centerX - halfThickness, bottomStart, centerX + halfThickness,
+          bottomStart, centerX + halfThickness, bottomEnd,
+          centerX - halfThickness, bottomStart, centerX + halfThickness,
+          bottomEnd, centerX - halfThickness, bottomEnd};
+
+      textShader.use();
+      textShader.setVec3("textColor", glm::vec3(0.92f, 0.96f, 1.0f));
+      glm::mat4 ortho = glm::ortho(0.0f, (float)fbW, 0.0f, (float)fbH);
+      textShader.setMat4("projection", ortho);
+
+      glBindVertexArray(crosshairVAO);
+      glBindBuffer(GL_ARRAY_BUFFER, crosshairVBO);
+      glBufferSubData(GL_ARRAY_BUFFER, 0,
+                      crosshairVertices.size() * sizeof(float),
+                      crosshairVertices.data());
+      glDrawArrays(GL_TRIANGLES, 0, 24);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+      glBindVertexArray(0);
+    }
+
     float cellTextScale = 4.2f * resolutionScale;
     for (int x = 0; x < board.width; ++x) {
       for (int y = 0; y < board.height; ++y) {

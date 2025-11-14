@@ -13,9 +13,17 @@ float hash(vec2 p)
 void main()
 {
     vec2 uv = vUV;
-    vec3 baseTop = vec3(0.09, 0.13, 0.21);
-    vec3 baseBottom = vec3(0.03, 0.05, 0.08);
-    vec3 baseColor = mix(baseBottom, baseTop, uv.y);
+    vec3 baseTop = vec3(0.1, 0.16, 0.26);
+    vec3 baseMid = vec3(0.06, 0.09, 0.15);
+    vec3 baseBottom = vec3(0.025, 0.04, 0.07);
+
+    float easedY = smoothstep(0.0, 1.0, uv.y);
+    float lowerBlend = smoothstep(0.0, 0.55, uv.y);
+    float upperBlend = smoothstep(0.45, 1.0, uv.y);
+
+    vec3 lowerGradient = mix(baseBottom, baseMid, lowerBlend);
+    vec3 upperGradient = mix(baseMid, baseTop, upperBlend);
+    vec3 baseColor = mix(lowerGradient, upperGradient, easedY);
 
     vec2 cell = uv * 14.0;
     vec2 grid = abs(fract(cell - 0.5) - 0.5);
