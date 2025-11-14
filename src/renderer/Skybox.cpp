@@ -59,8 +59,14 @@ glm::vec3 proceduralSky(const glm::vec3 &direction) {
   float stars = glm::smoothstep(0.98f, 1.0f, starLayer) * (1.0f - horizon) *
                 0.7f;
 
-  glm::vec3 groundColor(0.02f, 0.04f, 0.08f);
-  float blend = glm::smoothstep(-0.4f, 0.1f, dir.y);
+  glm::vec3 groundDeep(0.06f, 0.09f, 0.14f);
+  glm::vec3 groundGlow(0.18f, 0.24f, 0.32f);
+  float groundFade = glm::smoothstep(-1.0f, -0.1f, dir.y);
+  glm::vec3 groundColor = glm::mix(groundDeep, groundGlow, groundFade);
+  float groundDetail = glm::smoothstep(-1.0f, -0.2f, dir.y) *
+                       (0.5f + 0.5f * std::sin((dir.x + dir.z) * 6.0f));
+  groundColor += glm::vec3(0.04f, 0.05f, 0.06f) * groundDetail;
+  float blend = glm::smoothstep(-0.45f, 0.15f, dir.y);
 
   glm::vec3 color = glm::mix(groundColor, baseSky + auroraColor, blend);
   color += stars;

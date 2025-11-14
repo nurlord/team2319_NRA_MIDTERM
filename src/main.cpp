@@ -39,7 +39,6 @@ bool enterPressedLast = false;
 bool menuPressedLast = false;
 unsigned int textVAO = 0;
 unsigned int textVBO = 0;
-unsigned int backgroundVAO = 0;
 
 namespace {
 struct TilePalette {
@@ -57,9 +56,9 @@ const TilePalette kMinePalette{glm::vec3(0.96f, 0.28f, 0.35f),
                                glm::vec3(0.6f, 0.12f, 0.18f)};
 
 const std::array<glm::vec3, 8> kNumberColors = {
-    glm::vec3(0.32f, 0.68f, 1.0f),  glm::vec3(0.35f, 0.9f, 0.45f),
+    glm::vec3(0.32f, 0.68f, 1.0f), glm::vec3(0.35f, 0.9f, 0.45f),
     glm::vec3(0.98f, 0.45f, 0.45f), glm::vec3(0.7f, 0.5f, 0.98f),
-    glm::vec3(0.98f, 0.72f, 0.4f),  glm::vec3(0.45f, 0.9f, 0.9f),
+    glm::vec3(0.98f, 0.72f, 0.4f), glm::vec3(0.45f, 0.9f, 0.9f),
     glm::vec3(0.95f, 0.88f, 0.45f), glm::vec3(0.96f, 0.96f, 0.96f)};
 } // namespace
 
@@ -290,7 +289,6 @@ int main() {
   Shader cubeShader("shaders/cube.vert", "shaders/cube.frag");
   Shader textShader("shaders/text.vert", "shaders/text.frag");
   Shader skyboxShader("shaders/skybox.vert", "shaders/skybox.frag");
-  Shader backgroundShader("shaders/background.vert", "shaders/background.frag");
 
   cubeShader.use();
   cubeShader.setInt("skyboxMap", 0);
@@ -431,10 +429,12 @@ int main() {
 
     float overlayScale = 3.6f * resolutionScale;
     if (inMenu) {
-      drawCenteredText(textShader, "3D Minesweeper", fbW * 0.5f, fbH * 0.75f,
-                       overlayScale * 1.3f, glm::vec3(0.9f), fbW, fbH);
-      drawCenteredText(textShader, "Left Click: Reveal   Right Click: Flag",
-                       fbW * 0.5f, fbH * 0.6f, overlayScale * 0.6f,
+      drawCenteredText(textShader, "3D Minesweeper", fbW * 0.5f,
+                       fbH * 0.75f, overlayScale * 1.3f, glm::vec3(0.9f), fbW,
+                       fbH);
+      drawCenteredText(textShader,
+                       "Left Click: Reveal   Right Click: Flag", fbW * 0.5f,
+                       fbH * 0.6f, overlayScale * 0.6f,
                        glm::vec3(0.8f, 0.8f, 0.8f), fbW, fbH);
       drawCenteredText(textShader, "Press Enter to start", fbW * 0.5f,
                        fbH * 0.45f, overlayScale * 0.8f,
